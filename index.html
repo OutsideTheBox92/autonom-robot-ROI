@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robot ROI-kalkylator för handeln</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #5b6475;
+      --accent: #12b7a6;
+      --accent-dark: #0f8f82;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --warning: #f97316;
+      --navy: #0b1f3a;
+      --navy-soft: #1c2f4a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 40px 20px 32px;
+      text-align: center;
+      background: linear-gradient(135deg, #0b1f3a, #0f2d4d);
+      color: #fff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 2.1rem;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0 auto;
+      max-width: 760px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: -24px auto 60px;
+      padding: 0 20px 40px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.05);
+    }
+
+    .wizard {
+      display: grid;
+      gap: 24px;
+    }
+
+    .step-indicator {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .step-pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .step-pill.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .section-title {
+      margin-bottom: 8px;
+      font-size: 1.25rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .option-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #fff;
+    }
+
+    .option-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(18, 183, 166, 0.2);
+    }
+
+    .option-card input {
+      margin-right: 8px;
+    }
+
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .error {
+      color: #dc2626;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      background: #fff;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(18, 183, 166, 0.12);
+      color: #0b1f3a;
+      font-size: 0.8rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .metric {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .metric h4 {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .metric p {
+      margin: 6px 0 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    details {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .cta {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #e6fbf8, #ffffff);
+      border: 1px solid rgba(18, 183, 166, 0.25);
+    }
+
+    .thankyou {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #ecfdf3;
+      color: var(--success);
+      font-weight: 600;
+      display: none;
+    }
+
+    .copy-status {
+      color: var(--success);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Robot ROI-kalkylator för handeln</h1>
+    <p>Få en indikativ ROI och matcha rätt robotar för städ och kundupplevelse. Beräkningen bygger på Handels-default och tydliga antaganden som du kan justera.</p>
+  </header>
+
+  <main>
+    <div class="wizard card" aria-live="polite">
+      <div class="step-indicator" aria-label="Stegindikator">
+        <span class="step-pill" data-step="1">Steg 1: Mål</span>
+        <span class="step-pill" data-step="2">Steg 2: Underlag</span>
+        <span class="step-pill" data-step="3">Steg 3: Resultat</span>
+      </div>
+
+      <section id="step-1" class="step">
+        <h2 class="section-title">Vilket mål har ni?</h2>
+        <div class="grid-3" role="radiogroup" aria-label="Mål">
+          <label class="option-card" data-goal="cleaning">
+            <input type="radio" name="goal" value="cleaning" />
+            Frigör tid från städ
+          </label>
+          <label class="option-card" data-goal="experience">
+            <input type="radio" name="goal" value="experience" />
+            Öka konvertering/upplevelse i butik
+          </label>
+          <label class="option-card" data-goal="both">
+            <input type="radio" name="goal" value="both" />
+            Både städ + kundupplevelse
+          </label>
+        </div>
+        <div class="actions">
+          <span></span>
+          <button class="btn-primary" id="to-step-2">Nästa steg</button>
+        </div>
+      </section>
+
+      <section id="step-2" class="step" hidden>
+        <h2 class="section-title">Underlag för kalkylen</h2>
+
+        <div class="grid-2">
+          <div>
+            <label for="siteType">Site-typ</label>
+            <select id="siteType" required>
+              <option value="">Välj</option>
+              <option value="Butik">Butik</option>
+              <option value="Köpcentrum">Köpcentrum</option>
+              <option value="Butik med lager">Butik med lager</option>
+            </select>
+            <div class="error" data-error="siteType"></div>
+          </div>
+          <div>
+            <label for="siteCount">Antal siter</label>
+            <select id="siteCount" required>
+              <option value="">Välj</option>
+              <option value="1">1</option>
+              <option value="2-10">2–10</option>
+              <option value="11+">11+</option>
+            </select>
+            <div class="error" data-error="siteCount"></div>
+          </div>
+          <div>
+            <label for="openingHours">Öppettider</label>
+            <select id="openingHours" required>
+              <option value="">Välj</option>
+              <option value="Dag">Dag</option>
+              <option value="Kväll">Kväll</option>
+              <option value="Natt/blandat">Natt/blandat</option>
+            </select>
+            <div class="error" data-error="openingHours"></div>
+          </div>
+          <div>
+            <label for="hourlyWage">Timkostnad (kr/h)</label>
+            <input type="number" id="hourlyWage" min="0" />
+            <div class="hint">Handels-default baserat på kollektivavtal (justera vid behov).</div>
+            <div class="error" data-error="hourlyWage"></div>
+          </div>
+          <div class="inline">
+            <input type="checkbox" id="obToggle" />
+            <label for="obToggle">Inkludera OB/påslag (schablon)</label>
+          </div>
+        </div>
+
+        <div id="cleaning-section" style="margin-top: 24px;" hidden>
+          <h3 class="section-title">Städ-underlag</h3>
+          <div class="grid-2">
+            <div>
+              <label for="area">Yta (m²)</label>
+              <input type="number" id="area" min="1" />
+              <div class="error" data-error="area"></div>
+            </div>
+            <div>
+              <label for="frequency">Frekvens (ggr/vecka)</label>
+              <input type="number" id="frequency" min="1" max="7" />
+              <div class="error" data-error="frequency"></div>
+            </div>
+            <div>
+              <label for="cleaningHours">Tidsåtgång per tillfälle (timmar)</label>
+              <input type="number" id="cleaningHours" min="0" step="0.1" />
+              <div class="error" data-error="cleaningHours"></div>
+            </div>
+            <div>
+              <label for="operation">Driftform</label>
+              <select id="operation">
+                <option value="">Välj</option>
+                <option value="Egen regi">Egen regi</option>
+                <option value="Entreprenad">Entreprenad</option>
+              </select>
+              <div class="error" data-error="operation"></div>
+            </div>
+            <div>
+              <label for="contractCost">Entreprenadkostnad (kr/månad)</label>
+              <input type="number" id="contractCost" min="0" />
+              <div class="hint">Om ifyllt används detta som baseline istället för timmar.</div>
+            </div>
+            <div>
+              <label for="freeTime">Frigöra % av städtid</label>
+              <input type="range" id="freeTime" min="20" max="80" step="5" />
+              <div class="hint">Valt: <span id="freeTimeValue">50%</span></div>
+            </div>
+            <div>
+              <label for="budgetFocus">Budgetfokus</label>
+              <select id="budgetFocus">
+                <option value="">Välj</option>
+                <option value="låg">Låg</option>
+                <option value="medel">Medel</option>
+                <option value="hög">Hög</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="experience-section" style="margin-top: 24px;" hidden>
+          <h3 class="section-title">Kundupplevelse-underlag</h3>
+          <div class="grid-2">
+            <div>
+              <label for="customerFlow">Kundflöde</label>
+              <select id="customerFlow">
+                <option value="">Välj</option>
+                <option value="lågt">Lågt</option>
+                <option value="medel">Medel</option>
+                <option value="högt">Högt</option>
+              </select>
+              <div class="error" data-error="customerFlow"></div>
+            </div>
+            <div>
+              <label for="campaignFrequency">Kampanjfrekvens</label>
+              <select id="campaignFrequency">
+                <option value="">Välj</option>
+                <option value="1-2/mån">1–2/mån</option>
+                <option value="veckovis">Veckovis</option>
+                <option value="dagligen">Dagligen</option>
+              </select>
+              <div class="error" data-error="campaignFrequency"></div>
+            </div>
+          </div>
+          <fieldset style="margin-top: 16px; border: 1px solid var(--border); border-radius: 12px; padding: 12px;">
+            <legend>Vanliga frågor som tar tid</legend>
+            <div class="grid-2">
+              <label class="inline"><input type="checkbox" value="hitta produkt/hylla" class="faq" />Hitta produkt/hylla</label>
+              <label class="inline"><input type="checkbox" value="pris/kampanj" class="faq" />Pris/kampanj</label>
+              <label class="inline"><input type="checkbox" value="vägbeskrivning" class="faq" />Vägbeskrivning</label>
+              <label class="inline"><input type="checkbox" value="betalning/kassa" class="faq" />Betalning/kassa</label>
+              <label class="inline"><input type="checkbox" value="övrigt" class="faq" />Övrigt</label>
+            </div>
+          </fieldset>
+
+          <div style="margin-top: 16px;">
+            <label class="inline"><input type="checkbox" id="softEffectToggle" />Visa möjlig intäktseffekt (valfri)</label>
+            <div id="softEffectInputs" style="margin-top: 12px;" hidden>
+              <label for="softEffectPercent">Försiktig % ökning i konvertering/merförsäljning</label>
+              <input type="number" id="softEffectPercent" min="0" step="0.1" placeholder="t.ex. 1.5" />
+              <div class="hint">Visas som separat “mjuk effekt” och påverkar inte ROI-kärnan.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-secondary" id="back-to-1">Tillbaka</button>
+          <button class="btn-primary" id="to-step-3">Visa resultat</button>
+        </div>
+      </section>
+
+      <section id="step-3" class="step" hidden>
+        <h2 class="section-title">Resultat och rekommendationer</h2>
+
+        <div id="results-container"></div>
+
+        <details id="assumptions" aria-expanded="false">
+          <summary>Antaganden (indikativ beräkning)</summary>
+          <ul>
+            <li>Handels-default timkostnad används som utgångspunkt, men du kan ändra den.</li>
+            <li>Arbetsgivar- och påslagsschablon: <span id="assumption-oncost"></span>.</li>
+            <li>OB/påslag (om valt): <span id="assumption-ob"></span>.</li>
+            <li>Tillsynstid för städrobot: <span id="assumption-supervision"></span>.</li>
+            <li>Frigjord tid för kundupplevelse baseras på kundflöde + valda frågetyper.</li>
+            <li>Beräkningen visar intervall för att hålla den konservativ.</li>
+          </ul>
+        </details>
+
+        <div class="cta">
+          <h3>Få en offert / boka demo</h3>
+          <form id="leadForm">
+            <div class="grid-2">
+              <div>
+                <label for="leadName">Namn</label>
+                <input type="text" id="leadName" required />
+              </div>
+              <div>
+                <label for="leadCompany">Företag</label>
+                <input type="text" id="leadCompany" required />
+              </div>
+              <div>
+                <label for="leadEmail">E-post</label>
+                <input type="text" id="leadEmail" required />
+              </div>
+              <div>
+                <label for="leadPhone">Telefon</label>
+                <input type="text" id="leadPhone" required />
+              </div>
+            </div>
+            <div style="margin-top: 12px;">
+              <label for="summary">Sammanfattning (kopiera vid behov)</label>
+              <textarea id="summary" readonly></textarea>
+              <button type="button" class="btn-secondary" id="copySummary" style="margin-top: 10px;">Kopiera sammanfattning</button>
+              <div class="copy-status" id="copyStatus">Sammanfattning kopierad!</div>
+            </div>
+            <div class="actions">
+              <button class="btn-secondary" type="button" id="back-to-2">Tillbaka</button>
+              <button class="btn-primary" type="submit">Skicka förfrågan</button>
+            </div>
+            <div class="thankyou" id="thankYou">Tack! Vi återkommer snart.</div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const assumptions = {
+      handelsHourlyWageDefault: 160,
+      employerOncostMultiplier: 1.3142,
+      obMultiplier: 1.15,
+      supervisionTimeShare: 0.15,
+      daysPerMonth: 30.4,
+      customerFlowHours: {
+        "lågt": 0.25,
+        "medel": 0.5,
+        "högt": 1.0,
+      },
+      customerFlowBoost: {
+        low: 0.1,
+        medium: 0.2,
+        high: 0.3,
+      },
+    };
+
+    const robots = [
+      {
+        name: "CC1",
+        category: "städ",
+        price: "På offert",
+        pricePerDay: null,
+        usp: ["Helautomatiserad städrutin", "Skalbar för större ytor", "Konsekvent kvalitet"],
+        tags: ["stor-yta", "hög-frekvens", "tidsbesparing"],
+        primaryBenefit: "Maximal städtidsbesparing",
+        bestWhen: "Du har hög städfrekvens eller stora ytor.",
+      },
+      {
+        name: "Zaco X1000",
+        category: "städ",
+        price: "Från 50 kr per dag",
+        pricePerDay: 50,
+        usp: ["Kostnadseffektiv", "Snabb att komma igång", "Passar mindre ytor"],
+        tags: ["budget", "mindre-yta", "flexibel"],
+        primaryBenefit: "Kostnadseffektiv städning",
+        bestWhen: "Du vill komma igång snabbt med låg budget.",
+      },
+      {
+        name: "KettyBot",
+        category: "kundupplevelse",
+        price: "Från 115 kr per dag",
+        pricePerDay: 115,
+        usp: ["Guidar kunder direkt", "Kampanjskärm i rörelse", "Enkel uppdatering"],
+        tags: ["kundflöde", "kampanj", "standard"],
+        primaryBenefit: "Guidning & kampanjkommunikation",
+        bestWhen: "Kundflödet är stabilt och kampanjer körs veckovis.",
+      },
+      {
+        name: "KettyBot Pro",
+        category: "kundupplevelse",
+        price: "Från 135 kr per dag",
+        pricePerDay: 135,
+        usp: ["Hög kapacitet", "Premium-skärm", "Optimerad för peak-trafik"],
+        tags: ["premium", "hög-trafik", "kampanj"],
+        primaryBenefit: "Skalbar kundupplevelse",
+        bestWhen: "Du har högt kundflöde eller dagliga kampanjer.",
+      },
+    ];
+
+    const state = {
+      goal: "",
+      siteType: "",
+      siteCount: "",
+      openingHours: "",
+      hourlyWage: assumptions.handelsHourlyWageDefault,
+      obToggle: false,
+      cleaning: {
+        area: "",
+        frequency: "",
+        hoursPerSession: "",
+        operation: "",
+        contractCost: "",
+        freeTimePercent: 50,
+        budgetFocus: "",
+      },
+      experience: {
+        customerFlow: "",
+        campaignFrequency: "",
+        faqTopics: [],
+        softEffectEnabled: false,
+        softEffectPercent: "",
+      },
+    };
+
+    const stepElements = {
+      1: document.getElementById("step-1"),
+      2: document.getElementById("step-2"),
+      3: document.getElementById("step-3"),
+    };
+
+    const stepPills = document.querySelectorAll(".step-pill");
+    const resultsContainer = document.getElementById("results-container");
+    const freeTimeValue = document.getElementById("freeTimeValue");
+    const softEffectToggle = document.getElementById("softEffectToggle");
+    const softEffectInputs = document.getElementById("softEffectInputs");
+    const summaryTextarea = document.getElementById("summary");
+    const copyStatus = document.getElementById("copyStatus");
+    const thankYou = document.getElementById("thankYou");
+
+    document.getElementById("hourlyWage").value = state.hourlyWage;
+    document.getElementById("freeTime").value = state.cleaning.freeTimePercent;
+    freeTimeValue.textContent = `${state.cleaning.freeTimePercent}%`;
+
+    const setStep = (step) => {
+      Object.values(stepElements).forEach((el) => (el.hidden = true));
+      stepElements[step].hidden = false;
+      stepPills.forEach((pill) => {
+        pill.classList.toggle("active", Number(pill.dataset.step) === step);
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const showSections = () => {
+      const cleaningSection = document.getElementById("cleaning-section");
+      const experienceSection = document.getElementById("experience-section");
+      if (state.goal === "cleaning") {
+        cleaningSection.hidden = false;
+        experienceSection.hidden = true;
+      } else if (state.goal === "experience") {
+        cleaningSection.hidden = true;
+        experienceSection.hidden = false;
+      } else if (state.goal === "both") {
+        cleaningSection.hidden = false;
+        experienceSection.hidden = false;
+      }
+    };
+
+    const updateStateFromInputs = () => {
+      state.siteType = document.getElementById("siteType").value;
+      state.siteCount = document.getElementById("siteCount").value;
+      state.openingHours = document.getElementById("openingHours").value;
+      state.hourlyWage = Number(document.getElementById("hourlyWage").value || assumptions.handelsHourlyWageDefault);
+      state.obToggle = document.getElementById("obToggle").checked;
+
+      state.cleaning.area = Number(document.getElementById("area").value);
+      state.cleaning.frequency = Number(document.getElementById("frequency").value);
+      state.cleaning.hoursPerSession = Number(document.getElementById("cleaningHours").value);
+      state.cleaning.operation = document.getElementById("operation").value;
+      state.cleaning.contractCost = Number(document.getElementById("contractCost").value);
+      state.cleaning.freeTimePercent = Number(document.getElementById("freeTime").value);
+      state.cleaning.budgetFocus = document.getElementById("budgetFocus").value;
+
+      state.experience.customerFlow = document.getElementById("customerFlow").value;
+      state.experience.campaignFrequency = document.getElementById("campaignFrequency").value;
+      state.experience.faqTopics = Array.from(document.querySelectorAll(".faq:checked")).map((input) => input.value);
+      state.experience.softEffectEnabled = document.getElementById("softEffectToggle").checked;
+      state.experience.softEffectPercent = Number(document.getElementById("softEffectPercent").value);
+    };
+
+    const clearErrors = () => {
+      document.querySelectorAll(".error").forEach((el) => (el.textContent = ""));
+    };
+
+    const setError = (field, message) => {
+      const el = document.querySelector(`[data-error="${field}"]`);
+      if (el) {
+        el.textContent = message;
+      }
+    };
+
+    const validateStep2 = () => {
+      clearErrors();
+      let valid = true;
+
+      const requiredFields = ["siteType", "siteCount", "openingHours", "hourlyWage"];
+      requiredFields.forEach((field) => {
+        const value = document.getElementById(field).value;
+        if (!value && field !== "hourlyWage") {
+          setError(field, "Fyll i detta fält.");
+          valid = false;
+        }
+        if (field === "hourlyWage" && Number(value) <= 0) {
+          setError(field, "Ange en timkostnad större än 0.");
+          valid = false;
+        }
+      });
+
+      if (state.goal === "cleaning" || state.goal === "both") {
+        if (Number(document.getElementById("area").value) <= 0) {
+          setError("area", "Ange yta > 0.");
+          valid = false;
+        }
+        const freq = Number(document.getElementById("frequency").value);
+        if (freq <= 0 || freq > 7) {
+          setError("frequency", "Ange 1–7 gånger/vecka.");
+          valid = false;
+        }
+        if (Number(document.getElementById("cleaningHours").value) < 0) {
+          setError("cleaningHours", "Ange timmar >= 0.");
+          valid = false;
+        }
+        if (!document.getElementById("operation").value) {
+          setError("operation", "Välj driftform.");
+          valid = false;
+        }
+      }
+
+      if (state.goal === "experience" || state.goal === "both") {
+        if (!document.getElementById("customerFlow").value) {
+          setError("customerFlow", "Välj kundflöde.");
+          valid = false;
+        }
+        if (!document.getElementById("campaignFrequency").value) {
+          setError("campaignFrequency", "Välj kampanjfrekvens.");
+          valid = false;
+        }
+      }
+
+      return valid;
+    };
+
+    const formatCurrency = (value) => {
+      if (value === null || value === undefined || Number.isNaN(value)) return "-";
+      return new Intl.NumberFormat("sv-SE", { style: "currency", currency: "SEK", maximumFractionDigits: 0 }).format(value);
+    };
+
+    const formatRange = (min, max) => `${formatCurrency(min)} – ${formatCurrency(max)}`;
+
+    const calculateROI = (inputState, baseAssumptions) => {
+      const hourlyBase = inputState.hourlyWage * baseAssumptions.employerOncostMultiplier * (inputState.obToggle ? baseAssumptions.obMultiplier : 1);
+      const results = {
+        cleaning: null,
+        experience: null,
+      };
+
+      if (inputState.goal === "cleaning" || inputState.goal === "both") {
+        let baselineAnnual = 0;
+        let baselineHoursAnnual = 0;
+        const contractCost = inputState.cleaning.contractCost || 0;
+
+        if (inputState.cleaning.operation === "Entreprenad" && contractCost > 0) {
+          baselineAnnual = contractCost * 12;
+        } else {
+          baselineHoursAnnual = inputState.cleaning.hoursPerSession * inputState.cleaning.frequency * 52;
+          baselineAnnual = baselineHoursAnnual * hourlyBase;
+        }
+
+        const freeShare = inputState.cleaning.freeTimePercent / 100;
+        const savedHours = baselineHoursAnnual * freeShare * (1 - baseAssumptions.supervisionTimeShare);
+        const savedHoursMin = savedHours * 0.85;
+        const savedHoursMax = savedHours * 1.15;
+        const annualBenefitMin = savedHoursMin * hourlyBase;
+        const annualBenefitMax = savedHoursMax * hourlyBase;
+
+        results.cleaning = {
+          baselineAnnual,
+          savedHoursMin,
+          savedHoursMax,
+          annualBenefitMin,
+          annualBenefitMax,
+        };
+      }
+
+      if (inputState.goal === "experience" || inputState.goal === "both") {
+        const baseHours = baseAssumptions.customerFlowHours[inputState.experience.customerFlow] || 0;
+        const faqCount = inputState.experience.faqTopics.length;
+        const boost = faqCount >= 4 ? baseAssumptions.customerFlowBoost.high : faqCount >= 2 ? baseAssumptions.customerFlowBoost.medium : baseAssumptions.customerFlowBoost.low;
+        const dailyHours = baseHours * (1 + boost);
+        const annualHours = dailyHours * 365;
+        const annualHoursMin = annualHours * 0.8;
+        const annualHoursMax = annualHours * 1.2;
+        const annualBenefitMin = annualHoursMin * hourlyBase;
+        const annualBenefitMax = annualHoursMax * hourlyBase;
+
+        results.experience = {
+          annualHoursMin,
+          annualHoursMax,
+          annualBenefitMin,
+          annualBenefitMax,
+          softEffectPercent: inputState.experience.softEffectEnabled ? inputState.experience.softEffectPercent : 0,
+        };
+      }
+
+      return results;
+    };
+
+    const recommendRobots = (inputState) => {
+      const recommendations = {
+        cleaning: [],
+        experience: [],
+      };
+
+      if (inputState.goal === "cleaning" || inputState.goal === "both") {
+        const shouldFavorCC1 = inputState.cleaning.frequency >= 5 || inputState.cleaning.area >= 800 || inputState.cleaning.freeTimePercent >= 60;
+        const shouldFavorZaco = inputState.cleaning.area < 800 || inputState.cleaning.budgetFocus === "låg";
+
+        if (shouldFavorCC1) {
+          recommendations.cleaning.push({
+            robot: robots.find((r) => r.name === "CC1"),
+            reasons: [
+              `Du angav ${inputState.cleaning.area || 0} m² och ${inputState.cleaning.frequency || 0} ggr/vecka.`,
+              `Ni vill frigöra ${inputState.cleaning.freeTimePercent}% av städtiden.`,
+              "Hög frekvens/stor yta matchar CC1:s kapacitet.",
+            ],
+          });
+        }
+
+        if (shouldFavorZaco) {
+          recommendations.cleaning.push({
+            robot: robots.find((r) => r.name === "Zaco X1000"),
+            reasons: [
+              `Ytan (${inputState.cleaning.area || 0} m²) ligger i spannet för en snabb installation.`,
+              `Budgetfokus: ${inputState.cleaning.budgetFocus || "ej angivet"}.`,
+              "Zaco X1000 är kostnadseffektiv för mindre ytor.",
+            ],
+          });
+        }
+
+        if (!shouldFavorCC1 && !shouldFavorZaco) {
+          recommendations.cleaning.push({
+            robot: robots.find((r) => r.name === "CC1"),
+            reasons: [
+              "Din städprofil ligger i mellansegmentet.",
+              "CC1 ger en stabil ROI vid medelhög frekvens.",
+            ],
+          });
+          recommendations.cleaning.push({
+            robot: robots.find((r) => r.name === "Zaco X1000"),
+            reasons: [
+              "Zaco X1000 kan vara ett kostnadseffektivt alternativ.",
+              "Jämför kapacitet och pris för bästa matchning.",
+            ],
+          });
+        }
+      }
+
+      if (inputState.goal === "experience" || inputState.goal === "both") {
+        const highTraffic = inputState.experience.customerFlow === "högt" || inputState.experience.campaignFrequency === "dagligen";
+        if (highTraffic) {
+          recommendations.experience.push({
+            robot: robots.find((r) => r.name === "KettyBot Pro"),
+            reasons: [
+              `Kundflöde: ${inputState.experience.customerFlow}.`,
+              `Kampanjfrekvens: ${inputState.experience.campaignFrequency}.`,
+              "Hög trafik gynnas av KettyBot Pro:s kapacitet.",
+            ],
+          });
+        } else {
+          recommendations.experience.push({
+            robot: robots.find((r) => r.name === "KettyBot"),
+            reasons: [
+              `Kundflöde: ${inputState.experience.customerFlow}.`,
+              `Kampanjfrekvens: ${inputState.experience.campaignFrequency}.`,
+              "KettyBot ger bra ROI för stabilt flöde.",
+            ],
+          });
+        }
+
+        if (!highTraffic) {
+          recommendations.experience.push({
+            robot: robots.find((r) => r.name === "KettyBot Pro"),
+            reasons: [
+              "Om kundflödet ökar kan Pro-varianten skalas upp.",
+              "Bra att jämföra för framtida behov.",
+            ],
+          });
+        }
+      }
+
+      return recommendations;
+    };
+
+    const calculateRobotCostAnnual = (robot) => {
+      if (!robot.pricePerDay) return null;
+      return robot.pricePerDay * assumptions.daysPerMonth * 12;
+    };
+
+    const renderComparisonCard = (recommendation, roiData, categoryLabel) => {
+      const robot = recommendation.robot;
+      const robotCostAnnual = calculateRobotCostAnnual(robot);
+      const annualBenefitMin = roiData?.annualBenefitMin || 0;
+      const annualBenefitMax = roiData?.annualBenefitMax || 0;
+      const netMin = robotCostAnnual ? annualBenefitMin - robotCostAnnual : null;
+      const netMax = robotCostAnnual ? annualBenefitMax - robotCostAnnual : null;
+
+      return `
+        <div class="result-card">
+          <h4>${robot.name}</h4>
+          <p class="hint">${categoryLabel} • ${robot.price}</p>
+          <p><strong>${robot.primaryBenefit}</strong></p>
+          <div>
+            ${robot.usp.map((item) => `<span class="tag">${item}</span>`).join(" ")}
+          </div>
+          <p><em>Passar bäst när:</em> ${robot.bestWhen}</p>
+          <div class="metrics">
+            <div class="metric">
+              <h4>Årlig nytta</h4>
+              <p>${formatRange(annualBenefitMin, annualBenefitMax)}</p>
+            </div>
+            <div class="metric">
+              <h4>Netto (nytta - kostnad)</h4>
+              <p>${robotCostAnnual ? formatRange(netMin, netMax) : "Kontakta oss"}</p>
+            </div>
+          </div>
+          <div class="hint">Antaganden: ${robotCostAnnual ? "Robotkostnad uppskattad per dag" : "Pris på offert"}.</div>
+        </div>
+      `;
+    };
+
+    const buildSummary = (inputState, roiData, recommendations) => {
+      const lines = [];
+      lines.push(`Mål: ${inputState.goal}`);
+      lines.push(`Site-typ: ${inputState.siteType}, Antal: ${inputState.siteCount}, Öppettider: ${inputState.openingHours}`);
+      lines.push(`Timkostnad: ${inputState.hourlyWage} kr/h${inputState.obToggle ? " (inkl. OB/påslag)" : ""}`);
+
+      if (inputState.goal === "cleaning" || inputState.goal === "both") {
+        lines.push("--- Städ ---");
+        lines.push(`Yta: ${inputState.cleaning.area} m², Frekvens: ${inputState.cleaning.frequency} ggr/vecka`);
+        lines.push(`Tidsåtgång per tillfälle: ${inputState.cleaning.hoursPerSession} h, Driftform: ${inputState.cleaning.operation}`);
+        if (inputState.cleaning.contractCost) {
+          lines.push(`Entreprenadkostnad: ${inputState.cleaning.contractCost} kr/mån`);
+        }
+        lines.push(`Frigöra %: ${inputState.cleaning.freeTimePercent}%`);
+        lines.push(`Rekommendation: ${recommendations.cleaning.map((r) => r.robot.name).join(", ")}`);
+        if (roiData.cleaning) {
+          lines.push(`Årlig effekt: ${formatRange(roiData.cleaning.annualBenefitMin, roiData.cleaning.annualBenefitMax)}`);
+        }
+      }
+
+      if (inputState.goal === "experience" || inputState.goal === "both") {
+        lines.push("--- Kundupplevelse ---");
+        lines.push(`Kundflöde: ${inputState.experience.customerFlow}, Kampanj: ${inputState.experience.campaignFrequency}`);
+        lines.push(`Frågetyper: ${inputState.experience.faqTopics.join(", ") || "-"}`);
+        lines.push(`Rekommendation: ${recommendations.experience.map((r) => r.robot.name).join(", ")}`);
+        if (roiData.experience) {
+          lines.push(`Årlig effekt: ${formatRange(roiData.experience.annualBenefitMin, roiData.experience.annualBenefitMax)}`);
+        }
+        if (inputState.experience.softEffectEnabled && inputState.experience.softEffectPercent) {
+          lines.push(`Mjuk intäktseffekt: ${inputState.experience.softEffectPercent}%`);
+        }
+      }
+
+      return lines.join("\n");
+    };
+
+    const renderResults = () => {
+      updateStateFromInputs();
+
+      const roiData = calculateROI(state, assumptions);
+      const recommendations = recommendRobots(state);
+      const sections = [];
+
+      if (state.goal === "cleaning" || state.goal === "both") {
+        const cleaningCards = recommendations.cleaning
+          .map((rec) => renderComparisonCard(rec, roiData.cleaning, "Städ"))
+          .join("");
+        sections.push(`
+          <div class="result-card">
+            <h3>Städ-ROI</h3>
+            <p class="hint">Frigjorda timmar/vecka och besparing baserat på er städprofil.</p>
+            <div class="metrics">
+              <div class="metric">
+                <h4>Frigjorda timmar/år</h4>
+                <p>${Math.round(roiData.cleaning.savedHoursMin)} – ${Math.round(roiData.cleaning.savedHoursMax)}</p>
+              </div>
+              <div class="metric">
+                <h4>Årlig besparing</h4>
+                <p>${formatRange(roiData.cleaning.annualBenefitMin, roiData.cleaning.annualBenefitMax)}</p>
+              </div>
+              <div class="metric">
+                <h4>Payback (mån)</h4>
+                <p>${getPaybackText(recommendations.cleaning, roiData.cleaning)}</p>
+              </div>
+              <div class="metric">
+                <h4>ROI år 1</h4>
+                <p>${getRoiYearOneText(recommendations.cleaning, roiData.cleaning)}</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3>Rekommenderade städrobotar</h3>
+            <div class="comparison-grid">${cleaningCards}</div>
+            ${renderMotivations(recommendations.cleaning)}
+          </div>
+        `);
+      }
+
+      if (state.goal === "experience" || state.goal === "both") {
+        const expCards = recommendations.experience
+          .map((rec) => renderComparisonCard(rec, roiData.experience, "Kundupplevelse"))
+          .join("");
+        sections.push(`
+          <div class="result-card">
+            <h3>Kundupplevelse-ROI</h3>
+            <p class="hint">Primärt frigjord personaltid per år.</p>
+            <div class="metrics">
+              <div class="metric">
+                <h4>Frigjord tid (h/år)</h4>
+                <p>${Math.round(roiData.experience.annualHoursMin)} – ${Math.round(roiData.experience.annualHoursMax)}</p>
+              </div>
+              <div class="metric">
+                <h4>Årlig tidsnytta</h4>
+                <p>${formatRange(roiData.experience.annualBenefitMin, roiData.experience.annualBenefitMax)}</p>
+              </div>
+              <div class="metric">
+                <h4>Mjuk intäktseffekt</h4>
+                <p>${state.experience.softEffectEnabled && state.experience.softEffectPercent ? `${state.experience.softEffectPercent}%` : "Avstängd"}</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3>Rekommenderade kundupplevelserobotar</h3>
+            <div class="comparison-grid">${expCards}</div>
+            ${renderMotivations(recommendations.experience)}
+          </div>
+        `);
+      }
+
+      if (state.goal === "both") {
+        sections.push(`
+          <div class="result-card">
+            <h3>Totalt kombinations-case</h3>
+            <p>Genom att kombinera städ + kundupplevelse får ni både tidsbesparing och förbättrad butikskommunikation.</p>
+            <p><strong>Kombinations-CTA:</strong> Boka en gemensam demo för att se hur robotarna samverkar.</p>
+          </div>
+        `);
+      }
+
+      resultsContainer.innerHTML = sections.join("");
+
+      summaryTextarea.value = buildSummary(state, roiData, recommendations);
+      document.getElementById("assumption-oncost").textContent = `${assumptions.employerOncostMultiplier}x`;
+      document.getElementById("assumption-ob").textContent = `${assumptions.obMultiplier}x`;
+      document.getElementById("assumption-supervision").textContent = `${Math.round(assumptions.supervisionTimeShare * 100)}%`;
+    };
+
+    const renderMotivations = (recommendations) => {
+      if (!recommendations.length) return "";
+      return `
+        <div style="margin-top: 12px;">
+          ${recommendations
+            .map(
+              (rec) => `
+            <div class="result-card" style="margin-top: 12px;">
+              <strong>Varför ${rec.robot.name}?</strong>
+              <ul>
+                ${rec.reasons.map((reason) => `<li>${reason}</li>`).join("")}
+              </ul>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `;
+    };
+
+    const getPaybackText = (recommendations, roi) => {
+      const costs = recommendations
+        .map((rec) => calculateRobotCostAnnual(rec.robot))
+        .filter((value) => value !== null);
+      if (!costs.length) return "Kontakta oss";
+      const minPayback = Math.min(...costs.map((cost) => (cost / roi.annualBenefitMax) * 12));
+      const maxPayback = Math.max(...costs.map((cost) => (cost / roi.annualBenefitMin) * 12));
+      return `${minPayback.toFixed(1)} – ${maxPayback.toFixed(1)}`;
+    };
+
+    const getRoiYearOneText = (recommendations, roi) => {
+      const costs = recommendations
+        .map((rec) => calculateRobotCostAnnual(rec.robot))
+        .filter((value) => value !== null);
+      if (!costs.length) return "Kontakta oss";
+      const avgCost = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
+      const roiPercent = ((roi.annualBenefitMin - avgCost) / avgCost) * 100;
+      return `${roiPercent.toFixed(0)}%+`;
+    };
+
+    const handleGoalSelection = () => {
+      document.querySelectorAll(".option-card").forEach((card) => {
+        card.classList.remove("active");
+      });
+      const selected = document.querySelector("input[name='goal']:checked");
+      if (selected) {
+        selected.closest(".option-card").classList.add("active");
+        state.goal = selected.value;
+        showSections();
+      }
+    };
+
+    document.querySelectorAll("input[name='goal']").forEach((input) => {
+      input.addEventListener("change", handleGoalSelection);
+    });
+
+    document.getElementById("to-step-2").addEventListener("click", () => {
+      if (!state.goal) {
+        alert("Välj ett mål för att gå vidare.");
+        return;
+      }
+      setStep(2);
+    });
+
+    document.getElementById("back-to-1").addEventListener("click", () => setStep(1));
+    document.getElementById("back-to-2").addEventListener("click", () => setStep(2));
+
+    document.getElementById("to-step-3").addEventListener("click", () => {
+      updateStateFromInputs();
+      if (!validateStep2()) return;
+      renderResults();
+      setStep(3);
+    });
+
+    document.getElementById("freeTime").addEventListener("input", (event) => {
+      freeTimeValue.textContent = `${event.target.value}%`;
+    });
+
+    softEffectToggle.addEventListener("change", (event) => {
+      softEffectInputs.hidden = !event.target.checked;
+    });
+
+    document.getElementById("copySummary").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(summaryTextarea.value);
+        copyStatus.style.display = "block";
+        setTimeout(() => (copyStatus.style.display = "none"), 2000);
+      } catch (error) {
+        alert("Kunde inte kopiera. Markera texten manuellt.");
+      }
+    });
+
+    document.getElementById("leadForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const payload = {
+        name: document.getElementById("leadName").value,
+        company: document.getElementById("leadCompany").value,
+        email: document.getElementById("leadEmail").value,
+        phone: document.getElementById("leadPhone").value,
+        summary: summaryTextarea.value,
+      };
+
+      if (!payload.name || !payload.company || !payload.email || !payload.phone) {
+        alert("Fyll i alla kontaktfält.");
+        return;
+      }
+
+      console.log("Lead payload", payload);
+      thankYou.style.display = "block";
+      event.target.reset();
+    });
+
+    setStep(1);
+    document.getElementById("assumption-oncost").textContent = `${assumptions.employerOncostMultiplier}x`;
+    document.getElementById("assumption-ob").textContent = `${assumptions.obMultiplier}x`;
+    document.getElementById("assumption-supervision").textContent = `${Math.round(assumptions.supervisionTimeShare * 100)}%`;
+  </script>
+</body>
+</html>
