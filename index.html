@@ -7,17 +7,15 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f8fb;
+      --bg: #f5f7fb;
       --card: #ffffff;
-      --text: #0f172a;
-      --muted: #5b6475;
-      --accent: #12b7a6;
-      --accent-dark: #0f8f82;
-      --border: #e2e8f0;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+      --border: #e5e7eb;
       --success: #16a34a;
       --warning: #f97316;
-      --navy: #0b1f3a;
-      --navy-soft: #1c2f4a;
     }
 
     * {
@@ -33,37 +31,33 @@
     }
 
     header {
-      padding: 40px 20px 32px;
+      padding: 32px 20px 16px;
       text-align: center;
-      background: linear-gradient(135deg, #0b1f3a, #0f2d4d);
-      color: #fff;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     header h1 {
-      margin: 0 0 10px;
-      font-size: 2.1rem;
-      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+      font-size: 2rem;
     }
 
     header p {
       margin: 0 auto;
       max-width: 760px;
-      color: rgba(255, 255, 255, 0.75);
+      color: var(--muted);
     }
 
     main {
       max-width: 1100px;
-      margin: -24px auto 60px;
+      margin: 0 auto 60px;
       padding: 0 20px 40px;
     }
 
     .card {
       background: var(--card);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-      border: 1px solid rgba(15, 23, 42, 0.05);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+      border: 1px solid var(--border);
     }
 
     .wizard {
@@ -89,7 +83,7 @@
     }
 
     .step-pill.active {
-      background: var(--navy);
+      background: var(--accent);
       color: #fff;
       border-color: transparent;
     }
@@ -145,7 +139,7 @@
 
     .option-card.active {
       border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(18, 183, 166, 0.2);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
 
     .option-card input {
@@ -213,8 +207,8 @@
       align-items: center;
       padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(18, 183, 166, 0.12);
-      color: #0b1f3a;
+      background: #e0e7ff;
+      color: #3730a3;
       font-size: 0.8rem;
       margin-right: 6px;
       margin-bottom: 6px;
@@ -231,7 +225,6 @@
       background: #f8fafc;
       border-radius: 12px;
       padding: 12px;
-      border: 1px solid var(--border);
     }
 
     .metric h4 {
@@ -268,9 +261,9 @@
     .cta {
       margin-top: 24px;
       padding: 20px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #e6fbf8, #ffffff);
-      border: 1px solid rgba(18, 183, 166, 0.25);
+      border-radius: 16px;
+      background: linear-gradient(135deg, #eff6ff, #fff);
+      border: 1px solid var(--border);
     }
 
     .thankyou {
